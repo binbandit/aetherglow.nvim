@@ -167,7 +167,10 @@ local variants = {
 }
 
 local function get_palette(variant_name, ensure_wcag)
-  local v = variants[variant_name] or variants.dark_soft
+  local v = variants[variant_name]
+  if not v or type(v) == "function" then
+    v = variants.dark_soft
+  end
   local palette = vim.tbl_extend("force", colors, v)
   
   -- Ensure WCAG compliance if requested and wcag module is available
@@ -671,7 +674,7 @@ function M.setup(opts)
     },
     terminal_colors = true,
     compile = true,
-    ensure_wcag = true,  -- Ensure WCAG AA compliance
+    ensure_wcag = false,  -- Ensure WCAG AA compliance
   }
   
   opts = vim.tbl_extend("force", defaults, opts)
@@ -680,6 +683,7 @@ function M.setup(opts)
   if variant == "auto" then
     variant = variants.auto()
   end
+  M._current_variant = variant
   local palette = get_palette(variant, opts.ensure_wcag)
 
   if opts.on_colors then opts.on_colors(palette) end
@@ -746,5 +750,40 @@ function M.validate_wcag(variant)
   local palette = get_palette(variant or "dark_soft", false)
   return wcag.validate_palette(palette)
 end
+
+-- Helper function to test variants
+function M.test_variants()
+  local test_variants = {"dark_soft", "dark_bold", "neon_glow", "aurora_burst", "light_dawn"}
+  
+  for _, variant in ipairs(test_variants) do
+    vim.notify("Testing variant: " .. variant, vim.log.levels.INFO)
+    M.clear_cache()
+    M.setup({ variant = variant })
+    vim.cmd("redraw!")
+    vim.wait(1000) -- Wait 1 second between variants
+  end
+  
+  vim.notify("Variant test complete. Current variant: " .. (M._current_variant or "unknown"), vim.log.levels.INFO)
+end
+
+-- Debug function to show palette colors
+function M.show_palette_colors(variant)
+  variant = variant or M._current_variant or "dark_soft"
+  local palette = get_palette(variant, false)
+  
+  print("=== AetherGlow Palette for variant: " .. variant .. " ===")
+  print("Background: " .. palette.bg)
+  print("Foreground: " .. palette.fg)
+  print("Accent: " .. palette.accent)
+  print("Red: " .. palette.red)
+  print("Green: " .. palette.green)
+  print("Blue: " .. palette.blue)
+  print("Purple: " .. palette.purple)
+  print("Yellow: " .. palette.yellow)
+  print("=====================================")
+end
+
+-- Store current variant for debugging
+M._current_variant = nil
 
 return M
