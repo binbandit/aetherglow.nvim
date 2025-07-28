@@ -8,10 +8,12 @@ AetherGlow provides comprehensive support for 60+ popular Neovim plugins. All hi
 - **Native LSP** - Full diagnostic and reference highlighting
 - **Semantic Tokens** - Advanced LSP semantic highlighting with type-specific modifiers
 - **nvim-cmp** - Completion menu with kind-specific colors
+- **blink.cmp** - Modern completion framework with full kind support
 
 ## File Management
 
 - **Telescope** - Finder with custom border and selection highlights
+- **fzf-lua** - Fast fuzzy finder with preview support
 - **NvimTree** - File explorer with git integration
 - **neo-tree.nvim** - Modern file explorer
 - **Alpha.nvim** - Startup dashboard
@@ -46,6 +48,7 @@ AetherGlow provides comprehensive support for 60+ popular Neovim plugins. All hi
 - **indent-blankline.nvim** - Indentation guides
 - **rainbow-delimiters.nvim** - Colored brackets
 - **Trouble.nvim** - Diagnostics list
+- **symbols-outline.nvim** - Code structure viewer with semantic highlighting
 
 ## AI Assistants
 
