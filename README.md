@@ -42,12 +42,14 @@
 </table>
 
 ## Features
-- **Variants**: Dark Soft (low-contrast), Dark Bold (vibrant), Neon Glow (cyberpunk neon), Aurora Burst (vivid aurora colors), Light Dawn (warm light). Auto-switches via `vim.o.background`.
-- **Palette**: Original cosmic hues—soft purples/teals with neon pops. WCAG-compliant contrast.
-- **Customization**: Transparency, dim inactive windows, bold/italic styles, color overrides.
-- **Support**: Treesitter, LSP, diagnostics, terminal colors. 50+ plugins (Telescope, Lazy, Gitsigns, etc.).
-- **Extras**: Themes for Kitty, Alacritty, WezTerm, Ghostty, iTerm, Fish.
-- **Performance**: Pure Lua, lightweight, with compiled highlight caching for instant startups.
+- **5 Variants**: Dark Soft (low-contrast), Dark Bold (vibrant), Neon Glow (cyberpunk), Aurora Burst (vivid aurora), Light Dawn (warm light)
+- **Smart Auto-Switching**: Watches `vim.o.background` changes and updates theme in real-time
+- **Advanced Transparency**: Four levels from none to full transparency with smart floating window handling
+- **Semantic Token Support**: Full LSP semantic highlighting with type-specific modifiers
+- **Deep Customization**: `on_colors` palette hook and `on_highlights` for granular control
+- **60+ Plugin Support**: Including Treesitter, LSP, AI assistants, modern utilities, and more
+- **Terminal Themes**: Kitty, Alacritty, WezTerm, Ghostty, iTerm, Fish
+- **Blazing Performance**: Compiled highlight caching for instant startups
 
 ## Installation
 Via [Lazy.nvim](https://github.com/folke/lazy.nvim):
@@ -84,11 +86,12 @@ Just want to try it out? After installation:
 ```
 
 ## Configuration
-Default setup:
+
+### Basic Setup
 ```lua
 require("aetherglow").setup({
   variant = "auto",  -- "dark_soft", "dark_bold", "neon_glow", "aurora_burst", "light_dawn", or "auto"
-  transparent = false,
+  transparent = false,  -- false, true, "partial", "full"
   dim_inactive = true,
   styles = { comments = { italic = true }, keywords = { bold = true } },
   terminal_colors = true,
@@ -96,14 +99,47 @@ require("aetherglow").setup({
 })
 ```
 
-Override colors:
+### Advanced Features
+
+**Transparency Levels**
+```lua
+-- No transparency (default)
+transparent = false
+
+-- Basic transparency (main background only)
+transparent = true
+
+-- Partial transparency (keeps floating windows opaque)
+transparent = "partial"
+
+-- Full transparency (all backgrounds transparent)
+transparent = "full"
+```
+
+**Color & Highlight Customization**
 ```lua
 require("aetherglow").setup({
+  -- Modify palette before use
   on_colors = function(colors)
-    colors.bg = "#0a0b14"  -- Darker cosmic bg
+    colors.bg = "#0a0b14"
+    colors.purple = "#d4a5ff"
+  end,
+  
+  -- Override specific highlights after setup
+  on_highlights = function(hl, palette)
+    hl("Normal", { fg = palette.fg, bg = "#000000" })
+    hl("@keyword", { fg = palette.blue, bold = true, italic = true })
   end,
 })
 ```
+
+**Auto Theme Switching**
+```lua
+-- Automatically switches between light/dark based on vim.o.background
+variant = "auto"
+```
+
+The theme watches for `background` changes and updates automatically.
 
 ### Performance
 

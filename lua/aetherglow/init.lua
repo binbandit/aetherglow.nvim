@@ -97,7 +97,7 @@ end
 local function get_cache_key(opts)
   local key_parts = {
     opts.variant or "auto",
-    opts.transparent and "transparent" or "opaque",
+    opts.transparent and tostring(opts.transparent) or "false",
     opts.dim_inactive and "dim" or "nodim",
     opts.terminal_colors and "term" or "noterm",
   }
@@ -140,6 +140,16 @@ function M.clear_cache()
   os.execute("rm -rf " .. cache_dir)
 end
 
+local function get_transparent_bg(transparency_level)
+  if transparency_level == "full" then
+    return "NONE"
+  elseif transparency_level == "partial" then
+    return nil  -- Keep original
+  else
+    return nil
+  end
+end
+
 local function compile_highlights(palette, opts)
   local highlights = {}
   
@@ -147,7 +157,26 @@ local function compile_highlights(palette, opts)
     highlights[group] = hl
   end
   
-  add("Normal", { fg = palette.fg, bg = opts.transparent and "NONE" or palette.bg })
+  -- Handle transparency
+  local transparent_bg = nil
+  local float_bg = palette.bg_alt
+  
+  if opts.transparent then
+    if opts.transparent == "full" then
+      transparent_bg = "NONE"
+      float_bg = "NONE"
+    elseif opts.transparent == "partial" or opts.transparent == true then
+      transparent_bg = "NONE"
+      -- Keep float_bg as is for partial transparency
+    end
+  end
+  
+  add("Normal", { fg = palette.fg, bg = transparent_bg or palette.bg })
+  add("NormalFloat", { fg = palette.fg, bg = float_bg })
+  add("FloatBorder", { fg = palette.border, bg = float_bg })
+  add("Pmenu", { fg = palette.fg, bg = float_bg })
+  add("PmenuSel", { fg = palette.fg, bg = palette.bg_highlight })
+  
   add("Comment", { fg = palette.grey, italic = opts.styles.comments.italic })
   add("Keyword", { fg = palette.blue, bold = opts.styles.keywords.bold })
   add("String", { fg = palette.green })
@@ -160,19 +189,19 @@ local function compile_highlights(palette, opts)
   add("Search", { bg = palette.yellow, fg = palette.bg })
   add("IncSearch", { bg = palette.orange, fg = palette.bg })
   add("Visual", { bg = palette.bg_highlight })
-  add("CursorLine", { bg = palette.bg_alt })
+  add("CursorLine", { bg = transparent_bg and "NONE" or palette.bg_alt })
   add("LineNr", { fg = palette.grey })
   add("CursorLineNr", { fg = palette.fg, bold = true })
-  add("StatusLine", { bg = palette.bg_alt, fg = palette.fg })
+  add("StatusLine", { bg = transparent_bg and "NONE" or palette.bg_alt, fg = palette.fg })
   add("VertSplit", { fg = palette.border })
   add("WinSeparator", { fg = palette.border })
-  add("Folded", { fg = palette.grey, bg = palette.bg_alt })
+  add("Folded", { fg = palette.grey, bg = transparent_bg and "NONE" or palette.bg_alt })
   add("DiffAdd", { fg = palette.diff_add })
   add("DiffDelete", { fg = palette.diff_delete })
   add("DiffChange", { fg = palette.diff_change })
 
   if opts.dim_inactive then
-    add("NormalNC", { fg = palette.fg_alt, bg = palette.bg_alt })
+    add("NormalNC", { fg = palette.fg_alt, bg = transparent_bg and "NONE" or palette.bg_alt })
   end
 
   add("@keyword", { link = "Keyword" })
@@ -195,28 +224,55 @@ local function compile_highlights(palette, opts)
   add("@text.literal", { fg = palette.green })
   add("@text.reference", { fg = palette.teal })
 
+  -- Semantic Tokens Support
+  add("@lsp.type.class", { link = "@type" })
+  add("@lsp.type.comment", { link = "@comment" })
+  add("@lsp.type.decorator", { link = "@function" })
+  add("@lsp.type.enum", { link = "@type" })
+  add("@lsp.type.enumMember", { link = "@constant" })
+  add("@lsp.type.function", { link = "@function" })
+  add("@lsp.type.interface", { link = "@type" })
+  add("@lsp.type.macro", { link = "@macro" })
+  add("@lsp.type.method", { link = "@method" })
+  add("@lsp.type.namespace", { link = "@namespace" })
+  add("@lsp.type.parameter", { link = "@parameter" })
+  add("@lsp.type.property", { link = "@property" })
+  add("@lsp.type.struct", { link = "@type" })
+  add("@lsp.type.type", { link = "@type" })
+  add("@lsp.type.typeParameter", { link = "@parameter" })
+  add("@lsp.type.variable", { link = "@variable" })
+  
+  -- Semantic modifiers
+  add("@lsp.typemod.function.declaration", { fg = palette.purple, bold = true })
+  add("@lsp.typemod.function.readonly", { fg = palette.purple, italic = true })
+  add("@lsp.typemod.variable.constant", { link = "@constant" })
+  add("@lsp.typemod.variable.readonly", { fg = palette.teal, italic = true })
+  add("@lsp.typemod.property.readonly", { fg = palette.magenta, italic = true })
+  add("@lsp.typemod.class.abstract", { fg = palette.blue, italic = true })
+  add("@lsp.typemod.method.async", { fg = palette.purple, italic = true })
+
   add("DiagnosticError", { fg = palette.red })
   add("DiagnosticWarn", { fg = palette.orange })
   add("DiagnosticInfo", { fg = palette.info })
   add("DiagnosticHint", { fg = palette.blue })
-  add("DiagnosticVirtualTextError", { fg = palette.red, bg = palette.bg_alt })
-  add("DiagnosticVirtualTextWarn", { fg = palette.orange, bg = palette.bg_alt })
+  add("DiagnosticVirtualTextError", { fg = palette.red, bg = transparent_bg and "NONE" or palette.bg_alt })
+  add("DiagnosticVirtualTextWarn", { fg = palette.orange, bg = transparent_bg and "NONE" or palette.bg_alt })
   add("LspReferenceText", { bg = palette.bg_highlight })
   add("LspReferenceRead", { bg = palette.bg_highlight })
   add("LspReferenceWrite", { bg = palette.bg_highlight })
 
   add("TelescopeBorder", { fg = palette.border })
-  add("TelescopeNormal", { bg = palette.bg, fg = palette.fg })
+  add("TelescopeNormal", { bg = float_bg, fg = palette.fg })
   add("TelescopeSelection", { bg = palette.bg_highlight, fg = palette.fg })
   add("TelescopePromptPrefix", { fg = palette.accent })
 
   add("NvimTreeFolderIcon", { fg = palette.blue })
   add("NvimTreeIndentMarker", { fg = palette.grey })
-  add("NvimTreeNormal", { bg = palette.bg_alt, fg = palette.fg })
+  add("NvimTreeNormal", { bg = transparent_bg and "NONE" or palette.bg_alt, fg = palette.fg })
   add("NvimTreeGitDirty", { fg = palette.orange })
   add("NvimTreeGitNew", { fg = palette.green })
 
-  add("LazyNormal", { bg = palette.bg_alt })
+  add("LazyNormal", { bg = float_bg })
   add("LazyButton", { bg = palette.bg_highlight, fg = palette.fg })
   add("LazyH1", { fg = palette.accent, bold = true })
 
@@ -256,7 +312,7 @@ local function compile_highlights(palette, opts)
 
   add("RenderMarkdownH1", { fg = palette.blue, bold = true })
   add("RenderMarkdownH2", { fg = palette.purple, bold = true })
-  add("RenderMarkdownCode", { bg = palette.bg_alt })
+  add("RenderMarkdownCode", { bg = transparent_bg and "NONE" or palette.bg_alt })
   add("RenderMarkdownChecked", { fg = palette.green })
   add("RenderMarkdownUnchecked", { fg = palette.red })
   add("RenderMarkdownQuote", { fg = palette.grey, italic = true })
@@ -288,14 +344,14 @@ local function compile_highlights(palette, opts)
   add("AlphaShortcut", { fg = palette.yellow })
 
   -- Barbar.nvim
-  add("BarbarBufferVisible", { fg = palette.fg, bg = palette.bg_alt })
+  add("BarbarBufferVisible", { fg = palette.fg, bg = transparent_bg and "NONE" or palette.bg_alt })
   add("BarbarBufferCurrent", { fg = palette.fg, bg = palette.bg_highlight, bold = true })
-  add("BarbarBufferInactive", { fg = palette.grey, bg = palette.bg_alt })
+  add("BarbarBufferInactive", { fg = palette.grey, bg = transparent_bg and "NONE" or palette.bg_alt })
 
   -- Bufferline.nvim
-  add("BufferLineBackground", { fg = palette.grey, bg = palette.bg })
-  add("BufferLineBufferSelected", { fg = palette.fg, bg = palette.bg_alt, bold = true })
-  add("BufferLineBufferVisible", { fg = palette.fg_alt, bg = palette.bg })
+  add("BufferLineBackground", { fg = palette.grey, bg = transparent_bg or palette.bg })
+  add("BufferLineBufferSelected", { fg = palette.fg, bg = transparent_bg and "NONE" or palette.bg_alt, bold = true })
+  add("BufferLineBufferVisible", { fg = palette.fg_alt, bg = transparent_bg or palette.bg })
   add("BufferLineIndicatorSelected", { fg = palette.accent })
   add("BufferLineCloseButton", { fg = palette.red })
   add("BufferLineModifiedSelected", { fg = palette.green })
@@ -351,7 +407,7 @@ local function compile_highlights(palette, opts)
   add("LeapBackdrop", { fg = palette.grey })
 
   -- Lspsaga
-  add("SagaNormal", { bg = palette.bg_alt })
+  add("SagaNormal", { bg = float_bg })
   add("SagaBorder", { fg = palette.border })
   add("SagaTitle", { fg = palette.purple, bold = true })
   add("SagaFinderFname", { fg = palette.teal })
@@ -365,28 +421,28 @@ local function compile_highlights(palette, opts)
   add("NeoTreeGitAdded", { fg = palette.green })
   add("NeoTreeGitDeleted", { fg = palette.red })
   add("NeoTreeGitModified", { fg = palette.orange })
-  add("NeoTreeNormal", { bg = palette.bg_alt })
-  add("NeoTreeNormalNC", { bg = palette.bg_alt })
+  add("NeoTreeNormal", { bg = transparent_bg and "NONE" or palette.bg_alt })
+  add("NeoTreeNormalNC", { bg = transparent_bg and "NONE" or palette.bg_alt })
   add("NeoTreeRootName", { fg = palette.purple, bold = true })
 
   -- Neogit
   add("NeogitBranch", { fg = palette.blue })
   add("NeogitRemote", { fg = palette.purple })
   add("NeogitHunkHeader", { bg = palette.bg_highlight, fg = palette.fg })
-  add("NeogitHunkHeaderHighlight", { bg = palette.bg_alt, fg = palette.accent })
+  add("NeogitHunkHeaderHighlight", { bg = transparent_bg and "NONE" or palette.bg_alt, fg = palette.accent })
   add("NeogitDiffAdd", { fg = palette.green })
   add("NeogitDiffDelete", { fg = palette.red })
   add("NeogitDiffContextHighlight", { bg = palette.bg_highlight })
 
   -- Notify
   add("NotifyINFOBorder", { fg = palette.info })
-  add("NotifyINFOBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyINFOBody", { fg = palette.fg, bg = float_bg })
   add("NotifyINFOTitle", { fg = palette.info })
   add("NotifyWARNBorder", { fg = palette.orange })
-  add("NotifyWARNBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyWARNBody", { fg = palette.fg, bg = float_bg })
   add("NotifyWARNTitle", { fg = palette.orange })
   add("NotifyERRORBorder", { fg = palette.red })
-  add("NotifyERRORBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyERRORBody", { fg = palette.fg, bg = float_bg })
   add("NotifyERRORTitle", { fg = palette.red })
 
   -- Rainbow Delimiters
@@ -399,7 +455,7 @@ local function compile_highlights(palette, opts)
   add("RainbowDelimiterCyan", { fg = palette.cyan })
 
   -- Trouble.nvim
-  add("TroubleNormal", { bg = palette.bg_alt })
+  add("TroubleNormal", { bg = float_bg })
   add("TroubleText", { fg = palette.fg })
   add("TroubleCount", { fg = palette.purple, bg = palette.bg_highlight })
   add("TroubleError", { fg = palette.red })
@@ -412,12 +468,27 @@ local function compile_highlights(palette, opts)
   return highlights
 end
 
+-- Auto-switch functionality
+local augroup = vim.api.nvim_create_augroup("AetherGlow", { clear = true })
+local function setup_auto_switch(opts)
+  if opts.variant == "auto" then
+    vim.api.nvim_create_autocmd("OptionSet", {
+      pattern = "background",
+      group = augroup,
+      callback = function()
+        -- Re-run setup with current options
+        M.setup(opts)
+      end,
+    })
+  end
+end
+
 function M.setup(opts)
   opts = opts or {}
   
   local defaults = {
     variant = "auto",
-    transparent = false,
+    transparent = false,  -- false, true, "partial", "full"
     dim_inactive = true,
     styles = {
       comments = { italic = true },
@@ -481,6 +552,9 @@ function M.setup(opts)
   if opts.on_highlights then 
     opts.on_highlights(function(group, hl) vim.api.nvim_set_hl(0, group, hl) end, palette) 
   end
+  
+  -- Setup auto-switch if enabled
+  setup_auto_switch(opts)
 end
 
 function M.get_palette(variant)

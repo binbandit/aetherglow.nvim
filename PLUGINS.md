@@ -6,6 +6,7 @@ AetherGlow provides comprehensive support for 60+ popular Neovim plugins. All hi
 
 - **Treesitter** - Complete support for all capture groups
 - **Native LSP** - Full diagnostic and reference highlighting
+- **Semantic Tokens** - Advanced LSP semantic highlighting with type-specific modifiers
 - **nvim-cmp** - Completion menu with kind-specific colors
 
 ## File Management
