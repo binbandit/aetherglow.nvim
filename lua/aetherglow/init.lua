@@ -35,47 +35,39 @@ local colors = {
 local variants = {
   auto = function() return vim.o.background == "light" and "light_dawn" or "dark_soft" end,
   dark_soft = {
-    bg = colors.bg,
-    fg = colors.fg,
+    bg = "#1a1b26",
+    bg_alt = "#1c202f",
+    bg_highlight = "#202434",
+    fg = "#c0caf5",
+    fg_alt = "#878dab",
+    grey = "#4d557b",
+    dark_grey = "#343953",
+    red = "#c55e71",
+    orange = "#cc7e50",
+    yellow = "#b38c53",
+    green = "#7ea454",
+    teal = "#5caea1",
+    blue = "#6181c5",
+    purple = "#957bc5",
+    magenta = "#9f74bb",
+    cyan = "#6db0cc",
+    accent = "#957bc5",
+    border = "#101118",
+    diff_add = "#7ea454",
+    diff_delete = "#c55e71",
+    diff_change = "#cc7e50",
+    info = "#0a94ac",
     contrast = 0.8,
     neon = false,
   },
   dark_bold = {
     bg = "#0f101a",
-    fg = colors.fg,
-    contrast = 1.2,
-    neon = false,
-  },
-  neon_glow = {
-    bg = "#0a0b14",
-    fg = "#d0d0ff",
-    contrast = 1.5,
-    neon = true,
-    red = "#ff69b4",
-    green = "#00ff7f",
-    blue = "#00bfff",
-  },
-  light_dawn = {
-    bg = "#f7f7fa",     -- Slightly lighter for better contrast
-    fg = "#1a1b26",     -- Darker for 15:1 contrast
-    contrast = 1.0,
-    neon = false,
-    red = "#c42e2e",    -- Adjusted for 4.7:1 contrast
-    green = "#0e7c0e",  -- Adjusted for 5.0:1 contrast
-    blue = "#0451a5",   -- Adjusted for 7.2:1 contrast
-    purple = "#8839a5", -- Adjusted for 6.2:1 contrast
-    grey = "#5a5a5a",   -- Adjusted for 6.5:1 contrast
-    orange = "#c93a00", -- Adjusted for 4.8:1 contrast
-    yellow = "#795e00", -- Adjusted for 5.8:1 contrast
-    teal = "#006f94",   -- Adjusted for 5.3:1 contrast
-    cyan = "#0065a8",   -- Adjusted for 5.0:1 contrast
-    magenta = "#b4009e",-- Adjusted for 5.7:1 contrast
-  },
-  aurora_burst = {
-    bg = colors.bg,
-    fg = colors.fg,
-    contrast = 1.2,
-    neon = false,
+    bg_alt = "#2b3046",
+    bg_highlight = "#31374f",
+    fg = "#c0caf5",
+    fg_alt = "#cad4ff",
+    grey = "#5e6896",
+    dark_grey = "#4e567c",
     red = "#ff8daa",
     orange = "#ffbd78",
     yellow = "#ffd27c",
@@ -86,19 +78,97 @@ local variants = {
     magenta = "#eeafff",
     cyan = "#a4ffff",
     accent = "#e0b8ff",
+    border = "#191a24",
     diff_add = "#bdf77f",
     diff_delete = "#ff8daa",
     diff_change = "#ffbd78",
     info = "#0fdeff",
+    contrast = 1.2,
+    neon = false,
+  },
+  neon_glow = {
+    bg = "#0a0b14",
+    bg_alt = "#363c58",
+    bg_highlight = "#3d4563",
+    fg = "#d0d0ff",
+    fg_alt = "#fdffff",
+    grey = "#a0a0ff",
+    dark_grey = "#616c9c",
+    red = "#ff69b4",
+    orange = "#ffa500",
+    yellow = "#ffff00",
+    green = "#00ff7f",
+    teal = "#00ffff",
+    blue = "#00bfff",
+    purple = "#ff00ff",
+    magenta = "#ff1493",
+    cyan = "#00ffff",
+    accent = "#ff00ff",
+    border = "#1f212d",
+    diff_add = "#00ff7f",
+    diff_delete = "#ff69b4",
+    diff_change = "#ffa500",
+    info = "#00bfff",
+    contrast = 1.5,
+    neon = true,
+  },
+  light_dawn = {
+    bg = "#f0f0f5",
+    bg_alt = "#e4e4ea",
+    bg_highlight = "#d8d8de",
+    fg = "#24283b",
+    fg_alt = "#a9b1d6",
+    grey = "#abb2bf",
+    dark_grey = "#414868",
+    red = "#e06c75",
+    orange = "#d19a66",
+    yellow = "#e5c07b",
+    green = "#98c379",
+    teal = "#56b6c2",
+    blue = "#61afef",
+    purple = "#c678dd",
+    magenta = "#c678dd",
+    cyan = "#56b6c2",
+    accent = "#c678dd",
+    border = "#d0d0d5",
+    diff_add = "#98c379",
+    diff_delete = "#e06c75",
+    diff_change = "#d19a66",
+    info = "#61afef",
+    contrast = 1.0,
+    neon = false,
+  },
+  aurora_burst = {
+    bg = "#1a1b26",
+    bg_alt = "#2b3046",
+    bg_highlight = "#31374f",
+    fg = "#c0caf5",
+    fg_alt = "#cad4ff",
+    grey = "#7a84b3",
+    dark_grey = "#4e567c",
+    red = "#ff8daa",
+    orange = "#ffbd78",
+    yellow = "#ffd27c",
+    green = "#bdf77f",
+    teal = "#8afff2",
+    blue = "#92c2ff",
+    purple = "#e0b8ff",
+    magenta = "#eeafff",
+    cyan = "#a4ffff",
+    accent = "#e0b8ff",
+    border = "#191a24",
+    diff_add = "#bdf77f",
+    diff_delete = "#ff8daa",
+    diff_change = "#ffbd78",
+    info = "#0fdeff",
+    contrast = 1.2,
+    neon = false,
   },
 }
 
 local function get_palette(variant_name, ensure_wcag)
   local v = variants[variant_name] or variants.dark_soft
   local palette = vim.tbl_extend("force", colors, v)
-  if v.neon then
-    palette.accent = "#ff00ff"
-  end
   
   -- Ensure WCAG compliance if requested and wcag module is available
   if ensure_wcag and has_wcag then
@@ -601,7 +671,7 @@ function M.setup(opts)
     },
     terminal_colors = true,
     compile = true,
-    ensure_wcag = false,  -- Ensure WCAG AA compliance
+    ensure_wcag = true,  -- Ensure WCAG AA compliance
   }
   
   opts = vim.tbl_extend("force", defaults, opts)
