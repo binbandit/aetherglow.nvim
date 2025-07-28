@@ -753,17 +753,71 @@ end
 
 -- Helper function to test variants
 function M.test_variants()
+  -- Create a new buffer with sample code
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_set_current_buf(buf)
+  
+  -- Set filetype for syntax highlighting
+  vim.bo[buf].filetype = "lua"
+  
+  -- Add sample code
+  local sample_code = {
+    "-- AetherGlow Theme Test",
+    "local M = {}",
+    "",
+    "-- This is a comment",
+    "function M.hello(name)",
+    "  local greeting = 'Hello, ' .. name .. '!'",
+    "  if name == 'World' then",
+    "    print(greeting)",
+    "    return true",
+    "  else",
+    "    error('Unknown name')",
+    "    return false",
+    "  end",
+    "end",
+    "",
+    "local colors = {",
+    "  red = '#ff0000',",
+    "  green = '#00ff00',",
+    "  blue = '#0000ff',",
+    "}",
+    "",
+    "-- Test different highlights",
+    "M.test = function()",
+    "  for k, v in pairs(colors) do",
+    "    vim.notify('Color: ' .. k .. ' = ' .. v)",
+    "  end",
+    "end",
+    "",
+    "return M"
+  }
+  
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, sample_code)
+  
   local test_variants = {"dark_soft", "dark_bold", "neon_glow", "aurora_burst", "light_dawn"}
   
-  for _, variant in ipairs(test_variants) do
-    vim.notify("Testing variant: " .. variant, vim.log.levels.INFO)
+  for i, variant in ipairs(test_variants) do
+    -- Clear cache and setup variant
     M.clear_cache()
     M.setup({ variant = variant })
+    
+    -- Force redraw
     vim.cmd("redraw!")
-    vim.wait(1000) -- Wait 1 second between variants
+    
+    -- Show variant info
+    local palette = get_palette(variant, false)
+    local info = string.format(
+      "[%d/%d] Variant: %s | bg=%s fg=%s accent=%s",
+      i, #test_variants, variant, palette.bg, palette.fg, palette.accent
+    )
+    vim.api.nvim_echo({{info, "WarningMsg"}}, false, {})
+    
+    -- Wait for user input to continue
+    vim.fn.getchar()
   end
   
-  vim.notify("Variant test complete. Current variant: " .. (M._current_variant or "unknown"), vim.log.levels.INFO)
+  vim.notify("Variant test complete!", vim.log.levels.INFO)
 end
 
 -- Debug function to show palette colors
@@ -781,6 +835,37 @@ function M.show_palette_colors(variant)
   print("Purple: " .. palette.purple)
   print("Yellow: " .. palette.yellow)
   print("=====================================")
+end
+
+-- Compare all variant palettes
+function M.compare_variants()
+  local test_variants = {"dark_soft", "dark_bold", "neon_glow", "aurora_burst", "light_dawn"}
+  
+  print("\n=== AetherGlow Variant Comparison ===\n")
+  
+  for _, variant in ipairs(test_variants) do
+    local palette = get_palette(variant, false)
+    print(string.format("%-12s: bg=%-8s fg=%-8s red=%-8s green=%-8s blue=%-8s purple=%-8s",
+      variant, palette.bg, palette.fg, palette.red, palette.green, palette.blue, palette.purple))
+  end
+  
+  print("\n=====================================\n")
+end
+
+-- Debug function to check actual highlight groups
+function M.check_highlights()
+  local groups = {"Normal", "Comment", "String", "Function", "Keyword", "Error"}
+  print("\n=== Current Highlight Groups ===")
+  print("Variant: " .. (M._current_variant or "unknown"))
+  
+  for _, group in ipairs(groups) do
+    local hl = vim.api.nvim_get_hl(0, { name = group })
+    local fg = hl.fg and string.format("#%06x", hl.fg) or "none"
+    local bg = hl.bg and string.format("#%06x", hl.bg) or "none"
+    print(string.format("%-10s: fg=%s bg=%s", group, fg, bg))
+  end
+  
+  print("================================\n")
 end
 
 -- Store current variant for debugging
