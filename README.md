@@ -1,10 +1,10 @@
 # AetherGlow.nvim
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Neovim-0.8+-92c2ff.svg?style=flat-square&logo=Neovim&logoColor=white" alt="Neovim"/>
-  <img src="https://img.shields.io/github/stars/binbandit/aetherglow.nvim?style=flat-square&color=e0b8ff" alt="Stars"/>
-  <img src="https://img.shields.io/badge/themes-7%20variants-ff00ff?style=flat-square" alt="Themes"/>
-  <img src="https://img.shields.io/badge/plugins-60%2B%20supported-00ff7f?style=flat-square" alt="Plugins"/>
+  <img src="https://img.shields.io/badge/Neovim-0.8+-92c2ff.svg?style=for-the-badge&logo=Neovim&logoColor=white" alt="Neovim"/>
+  <img src="https://img.shields.io/github/stars/binbandit/aetherglow.nvim?style=for-the-badge&color=e0b8ff" alt="Stars"/>
+  <img src="https://img.shields.io/badge/themes-7%20variants-ff00ff?style=for-the-badge" alt="Themes"/>
+  <img src="https://img.shields.io/badge/plugins-60%2B%20supported-00ff7f?style=for-the-badge" alt="Plugins"/>
 </p>
 
 <p align="center">
