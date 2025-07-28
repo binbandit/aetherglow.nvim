@@ -1,0 +1,26 @@
+# AetherGlow Light Dawn for Alacritty
+# Add to your alacritty.toml
+
+[colors.primary]
+background = "#f7f7fa"
+foreground = "#1a1b26"
+
+[colors.normal]
+black = "#e4e4e7"
+red = "#c42e2e"
+green = "#0e7c0e"
+yellow = "#795e00"
+blue = "#0451a5"
+magenta = "#8839a5"
+cyan = "#006f94"
+white = "#24283b"
+
+[colors.bright]
+black = "#5a5a5a"
+red = "#c42e2e"
+green = "#0e7c0e"
+yellow = "#795e00"
+blue = "#0451a5"
+magenta = "#8839a5"
+cyan = "#006f94"
+white = "#1a1b26"
