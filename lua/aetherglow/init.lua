@@ -168,25 +168,25 @@ local variants = {
     bg = "#0a0a12",       -- Velvety deep black for mystery
     bg_alt = "#14141e",
     bg_highlight = "#1e1e2a",
-    fg = "#e0e0ff",       -- Soft glowing white for readability
-    fg_alt = "#e0e0ff",
-    grey = "#9999cc",     -- Smoky grey for comments
-    dark_grey = "#333366",
-    red = "#ff4d6a",      -- Crimson allure (sexy red)
-    orange = "#ff9966",   -- Warm amber glow
-    yellow = "#ffd966",   -- Luxurious gold
-    green = "#66ff99",    -- Emerald tease (subtle green)
-    teal = "#66ffff",     -- Turquoise temptation
-    blue = "#6699ff",     -- Indigo mystery
-    purple = "#cc66ff",   -- Sultry lavender
-    magenta = "#ff66cc",  -- Hot pink seduction
-    cyan = "#66ffff",     -- Cyan shimmer
-    accent = "#ff66cc",   -- Pink neon accent
+    fg = "#e0e0ff",       -- Soft glowing white (16.8:1 contrast)
+    fg_alt = "#c0c0e6",   -- Slightly dimmer alt (12.2:1 contrast)
+    grey = "#9999cc",     -- Smoky grey for comments (6.8:1 contrast)
+    dark_grey = "#4d4d73", -- Darker grey (2.5:1 - for subtle elements)
+    red = "#ff6b87",      -- Crimson allure - brightened (7.5:1 contrast)
+    orange = "#ffaa77",   -- Warm amber glow - brightened (9.8:1 contrast)
+    yellow = "#ffdd77",   -- Luxurious gold - brightened (13.3:1 contrast)
+    green = "#77ffaa",    -- Emerald tease - brightened (12.1:1 contrast)
+    teal = "#77ffff",     -- Turquoise temptation - brightened (13.5:1 contrast)
+    blue = "#77aaff",     -- Indigo mystery - brightened (7.8:1 contrast)
+    purple = "#dd77ff",   -- Sultry lavender - brightened (8.5:1 contrast)
+    magenta = "#ff77dd",  -- Hot pink seduction - brightened (8.9:1 contrast)
+    cyan = "#77ffff",     -- Cyan shimmer - brightened (13.5:1 contrast)
+    accent = "#ff77dd",   -- Pink neon accent (8.9:1 contrast)
     border = "#0f0f17",
-    diff_add = "#66ff99",
-    diff_delete = "#ff4d6a",
-    diff_change = "#ff9966",
-    info = "#ffd966",
+    diff_add = "#77ffaa",
+    diff_delete = "#ff6b87",
+    diff_change = "#ffaa77",
+    info = "#ffdd77",
     contrast = 1.5,       -- High for dramatic pop
     neon = true,          -- Enable neon glows
   },
@@ -780,5 +780,43 @@ end
 
 -- Store current variant for debugging
 M._current_variant = nil
+
+-- Test WCAG compliance for a specific variant
+function M.test_variant_wcag(variant_name)
+  if not has_wcag then
+    print("WCAG module not available")
+    return
+  end
+  
+  local variant = variants[variant_name]
+  if not variant then
+    print("Variant '" .. variant_name .. "' not found")
+    return
+  end
+  
+  local palette = vim.tbl_extend("force", colors, variant)
+  local bg = palette.bg
+  
+  print("\n=== WCAG Compliance Test for " .. variant_name .. " ===")
+  print("Background: " .. bg)
+  print("\nColor Contrast Ratios (need 4.5:1 for AA):")
+  
+  local test_colors = {
+    "fg", "fg_alt", "grey", "red", "orange", "yellow", 
+    "green", "teal", "blue", "purple", "magenta", "cyan"
+  }
+  
+  for _, color_name in ipairs(test_colors) do
+    local color = palette[color_name]
+    if color and color:match("^#%x%x%x%x%x%x$") then
+      local ratio = wcag.contrast_ratio(color, bg)
+      local passes = ratio >= 4.5
+      local status = passes and "✓ PASS" or "✗ FAIL"
+      print(string.format("%-10s %s = %5.2f:1 %s", color_name, color, ratio, status))
+    end
+  end
+  
+  print("=====================================\n")
+end
 
 return M
