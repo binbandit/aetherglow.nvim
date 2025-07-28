@@ -1,9 +1,9 @@
 # AetherGlow.nvim
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Neovim-0.8+-blueviolet.svg?style=flat-square&logo=Neovim&logoColor=white" alt="Neovim"/>
-  <img src="https://img.shields.io/github/stars/binbandit/aetherglow.nvim?style=flat-square" alt="Stars"/>
-  <img src="https://img.shields.io/badge/themes-5%20variants-ff69b4?style=flat-square" alt="Themes"/>
+  <img src="https://img.shields.io/badge/Neovim-0.8+-92c2ff.svg?style=flat-square&logo=Neovim&logoColor=white" alt="Neovim"/>
+  <img src="https://img.shields.io/github/stars/binbandit/aetherglow.nvim?style=flat-square&color=e0b8ff" alt="Stars"/>
+  <img src="https://img.shields.io/badge/themes-5%20variants-ff00ff?style=flat-square" alt="Themes"/>
   <img src="https://img.shields.io/badge/plugins-60%2B%20supported-00ff7f?style=flat-square" alt="Plugins"/>
 </p>
 
