@@ -1,0 +1,490 @@
+local M = {}
+
+local cache_dir = vim.fn.stdpath("cache") .. "/aetherglow"
+local cache_file = cache_dir .. "/highlights"
+
+local colors = {
+  none = "NONE",
+  bg = "#1a1b26",
+  bg_alt = "#24283b",
+  bg_highlight = "#292e42",
+  fg = "#c0caf5",
+  fg_alt = "#a9b1d6",
+  grey = "#565f89",
+  dark_grey = "#414868",
+  red = "#f7768e",
+  orange = "#ff9e64",
+  yellow = "#e0af68",
+  green = "#9ece6a",
+  teal = "#73daca",
+  blue = "#7aa2f7",
+  purple = "#bb9af7",
+  magenta = "#c792ea",
+  cyan = "#89ddff",
+  accent = "#bb9af7",
+  border = "#15161e",
+  diff_add = "#9ece6a",
+  diff_delete = "#f7768e",
+  diff_change = "#ff9e64",
+  info = "#0db9d7",
+}
+
+local variants = {
+  auto = function() return vim.o.background == "light" and "light_dawn" or "dark_soft" end,
+  dark_soft = {
+    bg = colors.bg,
+    fg = colors.fg,
+    contrast = 0.8,
+    neon = false,
+  },
+  dark_bold = {
+    bg = "#0f101a",
+    fg = colors.fg,
+    contrast = 1.2,
+    neon = false,
+  },
+  neon_glow = {
+    bg = "#0a0b14",
+    fg = "#d0d0ff",
+    contrast = 1.5,
+    neon = true,
+    red = "#ff69b4",
+    green = "#00ff7f",
+    blue = "#00bfff",
+  },
+  light_dawn = {
+    bg = "#f0f0f5",
+    fg = "#24283b",
+    contrast = 1.0,
+    neon = false,
+    red = "#e06c75",
+    green = "#98c379",
+    blue = "#61afef",
+    purple = "#c678dd",
+    grey = "#abb2bf",
+  },
+  aurora_burst = {
+    bg = colors.bg,
+    fg = colors.fg,
+    contrast = 1.2,
+    neon = false,
+    red = "#ff8daa",
+    orange = "#ffbd78",
+    yellow = "#ffd27c",
+    green = "#bdf77f",
+    teal = "#8afff2",
+    blue = "#92c2ff",
+    purple = "#e0b8ff",
+    magenta = "#eeafff",
+    cyan = "#a4ffff",
+    accent = "#e0b8ff",
+    diff_add = "#bdf77f",
+    diff_delete = "#ff8daa",
+    diff_change = "#ffbd78",
+    info = "#0fdeff",
+  },
+}
+
+local function get_palette(variant_name)
+  local v = variants[variant_name] or variants.dark_soft
+  local palette = vim.tbl_extend("force", colors, v)
+  if v.neon then
+    palette.accent = "#ff00ff"
+  end
+  return palette
+end
+
+local function get_cache_key(opts)
+  local key_parts = {
+    opts.variant or "auto",
+    opts.transparent and "transparent" or "opaque",
+    opts.dim_inactive and "dim" or "nodim",
+    opts.terminal_colors and "term" or "noterm",
+  }
+  
+  if opts.styles then
+    table.insert(key_parts, opts.styles.comments and opts.styles.comments.italic and "italic-comments" or "no-italic-comments")
+    table.insert(key_parts, opts.styles.keywords and opts.styles.keywords.bold and "bold-keywords" or "no-bold-keywords")
+  end
+  
+  return table.concat(key_parts, "_")
+end
+
+local function load_cache(cache_key)
+  local cache_path = cache_file .. "_" .. cache_key
+  local f = io.open(cache_path, "r")
+  if not f then return nil end
+  
+  local content = f:read("*all")
+  f:close()
+  
+  local ok, cached = pcall(loadstring(content))
+  if ok and cached then
+    return cached()
+  end
+  return nil
+end
+
+local function save_cache(cache_key, highlights)
+  vim.fn.mkdir(cache_dir, "p")
+  
+  local cache_path = cache_file .. "_" .. cache_key
+  local f = io.open(cache_path, "w")
+  if not f then return end
+  
+  f:write("return " .. vim.inspect(highlights))
+  f:close()
+end
+
+function M.clear_cache()
+  os.execute("rm -rf " .. cache_dir)
+end
+
+local function compile_highlights(palette, opts)
+  local highlights = {}
+  
+  local function add(group, hl)
+    highlights[group] = hl
+  end
+  
+  add("Normal", { fg = palette.fg, bg = opts.transparent and "NONE" or palette.bg })
+  add("Comment", { fg = palette.grey, italic = opts.styles.comments.italic })
+  add("Keyword", { fg = palette.blue, bold = opts.styles.keywords.bold })
+  add("String", { fg = palette.green })
+  add("Function", { fg = palette.purple })
+  add("Identifier", { fg = palette.teal })
+  add("Constant", { fg = palette.magenta })
+  add("Operator", { fg = palette.cyan })
+  add("Error", { fg = palette.red, bold = true })
+  add("WarningMsg", { fg = palette.orange })
+  add("Search", { bg = palette.yellow, fg = palette.bg })
+  add("IncSearch", { bg = palette.orange, fg = palette.bg })
+  add("Visual", { bg = palette.bg_highlight })
+  add("CursorLine", { bg = palette.bg_alt })
+  add("LineNr", { fg = palette.grey })
+  add("CursorLineNr", { fg = palette.fg, bold = true })
+  add("StatusLine", { bg = palette.bg_alt, fg = palette.fg })
+  add("VertSplit", { fg = palette.border })
+  add("WinSeparator", { fg = palette.border })
+  add("Folded", { fg = palette.grey, bg = palette.bg_alt })
+  add("DiffAdd", { fg = palette.diff_add })
+  add("DiffDelete", { fg = palette.diff_delete })
+  add("DiffChange", { fg = palette.diff_change })
+
+  if opts.dim_inactive then
+    add("NormalNC", { fg = palette.fg_alt, bg = palette.bg_alt })
+  end
+
+  add("@keyword", { link = "Keyword" })
+  add("@string", { link = "String" })
+  add("@function", { link = "Function" })
+  add("@variable", { link = "Identifier" })
+  add("@constant", { link = "Constant" })
+  add("@operator", { link = "Operator" })
+  add("@error", { link = "Error" })
+  add("@comment", { link = "Comment" })
+  add("@type", { fg = palette.teal })
+  add("@punctuation", { fg = palette.fg_alt })
+  add("@property", { fg = palette.magenta })
+  add("@parameter", { fg = palette.orange })
+  add("@constructor", { fg = palette.yellow })
+  add("@namespace", { fg = palette.blue, italic = true })
+  add("@tag", { fg = palette.red })
+  add("@label", { fg = palette.purple })
+  add("@include", { fg = palette.cyan })
+  add("@text.literal", { fg = palette.green })
+  add("@text.reference", { fg = palette.teal })
+
+  add("DiagnosticError", { fg = palette.red })
+  add("DiagnosticWarn", { fg = palette.orange })
+  add("DiagnosticInfo", { fg = palette.info })
+  add("DiagnosticHint", { fg = palette.blue })
+  add("DiagnosticVirtualTextError", { fg = palette.red, bg = palette.bg_alt })
+  add("DiagnosticVirtualTextWarn", { fg = palette.orange, bg = palette.bg_alt })
+  add("LspReferenceText", { bg = palette.bg_highlight })
+  add("LspReferenceRead", { bg = palette.bg_highlight })
+  add("LspReferenceWrite", { bg = palette.bg_highlight })
+
+  add("TelescopeBorder", { fg = palette.border })
+  add("TelescopeNormal", { bg = palette.bg, fg = palette.fg })
+  add("TelescopeSelection", { bg = palette.bg_highlight, fg = palette.fg })
+  add("TelescopePromptPrefix", { fg = palette.accent })
+
+  add("NvimTreeFolderIcon", { fg = palette.blue })
+  add("NvimTreeIndentMarker", { fg = palette.grey })
+  add("NvimTreeNormal", { bg = palette.bg_alt, fg = palette.fg })
+  add("NvimTreeGitDirty", { fg = palette.orange })
+  add("NvimTreeGitNew", { fg = palette.green })
+
+  add("LazyNormal", { bg = palette.bg_alt })
+  add("LazyButton", { bg = palette.bg_highlight, fg = palette.fg })
+  add("LazyH1", { fg = palette.accent, bold = true })
+
+  add("GitSignsAdd", { fg = palette.green })
+  add("GitSignsChange", { fg = palette.orange })
+  add("GitSignsDelete", { fg = palette.red })
+
+  add("WhichKey", { fg = palette.accent })
+  add("WhichKeyGroup", { fg = palette.blue })
+  add("WhichKeyDesc", { fg = palette.purple })
+
+  add("NoiceCmdlinePopupBorder", { fg = palette.border })
+  add("NoiceConfirmBorder", { fg = palette.border })
+
+  add("MiniStatuslineModeNormal", { bg = palette.blue, fg = palette.bg })
+  add("MiniIndentscopeSymbol", { fg = palette.grey })
+
+  -- AI Plugins
+  add("CodeiumSuggestion", { fg = palette.grey, italic = true })
+  add("CmpItemKindCodeium", { fg = palette.green })
+  add("CmpItemKindSupermaven", { fg = palette.green })
+  add("SupermavenSuggestion", { fg = palette.grey })
+  add("CmpItemKindCopilot", { fg = palette.green })
+  add("CopilotSuggestion", { fg = palette.grey, italic = true })
+
+  -- Modern Utils
+  add("FlashBackdrop", { fg = palette.grey })
+  add("FlashMatch", { bg = palette.bg_highlight, fg = palette.fg })
+  add("FlashCurrent", { bg = palette.yellow, fg = palette.bg })
+  add("FlashLabel", { fg = palette.accent, bold = true })
+  add("FlashPrompt", { fg = palette.blue })
+
+  add("GrugFarResultPath", { fg = palette.blue })
+  add("GrugFarResultMatch", { bg = palette.yellow, fg = palette.bg })
+  add("GrugFarHelpHeader", { fg = palette.purple, bold = true })
+  add("GrugFarInputLabel", { fg = palette.teal })
+
+  add("RenderMarkdownH1", { fg = palette.blue, bold = true })
+  add("RenderMarkdownH2", { fg = palette.purple, bold = true })
+  add("RenderMarkdownCode", { bg = palette.bg_alt })
+  add("RenderMarkdownChecked", { fg = palette.green })
+  add("RenderMarkdownUnchecked", { fg = palette.red })
+  add("RenderMarkdownQuote", { fg = palette.grey, italic = true })
+
+  add("SnacksPickerFile", { fg = palette.teal })
+  add("SnacksPickerDir", { fg = palette.blue })
+
+  -- Testing/Debug
+  add("NeotestPassed", { fg = palette.green })
+  add("NeotestFailed", { fg = palette.red })
+  add("NeotestRunning", { fg = palette.yellow })
+  add("NeotestSkipped", { fg = palette.grey })
+  add("NeotestNamespace", { fg = palette.purple })
+  add("NeotestTest", { fg = palette.teal })
+
+  add("DapUIStoppedThread", { fg = palette.yellow })
+  add("DapUIBreakpointsPath", { fg = palette.blue })
+  add("DapUIVariable", { fg = palette.teal })
+  add("DapUIScope", { fg = palette.purple })
+  add("DapUIValue", { fg = palette.green })
+  add("DapUIWatchesEmpty", { fg = palette.grey })
+  add("DapUIWatchesValue", { fg = palette.green })
+  add("DapUIWatchesError", { fg = palette.red })
+
+  -- Alpha.nvim
+  add("AlphaHeader", { fg = palette.blue, bold = true })
+  add("AlphaButtons", { fg = palette.teal })
+  add("AlphaFooter", { fg = palette.grey, italic = true })
+  add("AlphaShortcut", { fg = palette.yellow })
+
+  -- Barbar.nvim
+  add("BarbarBufferVisible", { fg = palette.fg, bg = palette.bg_alt })
+  add("BarbarBufferCurrent", { fg = palette.fg, bg = palette.bg_highlight, bold = true })
+  add("BarbarBufferInactive", { fg = palette.grey, bg = palette.bg_alt })
+
+  -- Bufferline.nvim
+  add("BufferLineBackground", { fg = palette.grey, bg = palette.bg })
+  add("BufferLineBufferSelected", { fg = palette.fg, bg = palette.bg_alt, bold = true })
+  add("BufferLineBufferVisible", { fg = palette.fg_alt, bg = palette.bg })
+  add("BufferLineIndicatorSelected", { fg = palette.accent })
+  add("BufferLineCloseButton", { fg = palette.red })
+  add("BufferLineModifiedSelected", { fg = palette.green })
+  add("BufferLineSeparator", { fg = palette.border })
+
+  -- nvim-cmp
+  add("CmpItemAbbr", { fg = palette.fg })
+  add("CmpItemAbbrDeprecated", { fg = palette.grey, strikethrough = true })
+  add("CmpItemAbbrMatch", { fg = palette.blue, bold = true })
+  add("CmpItemAbbrMatchFuzzy", { fg = palette.blue })
+  add("CmpItemKind", { fg = palette.purple })
+  add("CmpItemMenu", { fg = palette.grey })
+  add("CmpItemKindVariable", { fg = palette.teal })
+  add("CmpItemKindFunction", { fg = palette.purple })
+  add("CmpItemKindMethod", { fg = palette.purple })
+  add("CmpItemKindKeyword", { fg = palette.blue })
+  add("CmpItemKindText", { fg = palette.green })
+  add("CmpItemKindSnippet", { fg = palette.yellow })
+  add("CmpItemKindFile", { fg = palette.orange })
+  add("CmpItemKindFolder", { fg = palette.orange })
+
+  -- Dashboard.nvim
+  add("DashboardHeader", { fg = palette.blue, bold = true })
+  add("DashboardCenter", { fg = palette.teal })
+  add("DashboardShortcut", { fg = palette.yellow })
+  add("DashboardFooter", { fg = palette.purple, bold = true })
+
+  -- Hop.nvim
+  add("HopNextKey", { fg = palette.accent, bold = true })
+  add("HopNextKey1", { fg = palette.blue, bold = true })
+  add("HopNextKey2", { fg = palette.teal })
+  add("HopUnmatched", { fg = palette.grey })
+
+  -- Illuminate
+  add("IlluminatedWordText", { bg = palette.bg_highlight })
+  add("IlluminatedWordRead", { bg = palette.bg_highlight })
+  add("IlluminatedWordWrite", { bg = palette.bg_highlight })
+
+  -- IndentBlankline
+  add("IndentBlanklineChar", { fg = palette.grey })
+  add("IndentBlanklineContextChar", { fg = palette.accent })
+  add("IndentBlanklineIndent1", { fg = palette.blue })
+  add("IndentBlanklineIndent2", { fg = palette.green })
+  add("IndentBlanklineIndent3", { fg = palette.yellow })
+  add("IndentBlanklineIndent4", { fg = palette.orange })
+  add("IndentBlanklineIndent5", { fg = palette.red })
+  add("IndentBlanklineIndent6", { fg = palette.purple })
+
+  -- Leap.nvim
+  add("LeapMatch", { fg = palette.fg, bg = palette.yellow })
+  add("LeapLabelPrimary", { fg = palette.bg, bg = palette.accent, bold = true })
+  add("LeapLabelSecondary", { fg = palette.bg, bg = palette.blue })
+  add("LeapBackdrop", { fg = palette.grey })
+
+  -- Lspsaga
+  add("SagaNormal", { bg = palette.bg_alt })
+  add("SagaBorder", { fg = palette.border })
+  add("SagaTitle", { fg = palette.purple, bold = true })
+  add("SagaFinderFname", { fg = palette.teal })
+  add("SagaDiagnosticError", { fg = palette.red })
+  add("SagaDiagnosticWarn", { fg = palette.orange })
+
+  -- NeoTree
+  add("NeoTreeDirectoryIcon", { fg = palette.blue })
+  add("NeoTreeDirectoryName", { fg = palette.fg })
+  add("NeoTreeFileName", { fg = palette.fg_alt })
+  add("NeoTreeGitAdded", { fg = palette.green })
+  add("NeoTreeGitDeleted", { fg = palette.red })
+  add("NeoTreeGitModified", { fg = palette.orange })
+  add("NeoTreeNormal", { bg = palette.bg_alt })
+  add("NeoTreeNormalNC", { bg = palette.bg_alt })
+  add("NeoTreeRootName", { fg = palette.purple, bold = true })
+
+  -- Neogit
+  add("NeogitBranch", { fg = palette.blue })
+  add("NeogitRemote", { fg = palette.purple })
+  add("NeogitHunkHeader", { bg = palette.bg_highlight, fg = palette.fg })
+  add("NeogitHunkHeaderHighlight", { bg = palette.bg_alt, fg = palette.accent })
+  add("NeogitDiffAdd", { fg = palette.green })
+  add("NeogitDiffDelete", { fg = palette.red })
+  add("NeogitDiffContextHighlight", { bg = palette.bg_highlight })
+
+  -- Notify
+  add("NotifyINFOBorder", { fg = palette.info })
+  add("NotifyINFOBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyINFOTitle", { fg = palette.info })
+  add("NotifyWARNBorder", { fg = palette.orange })
+  add("NotifyWARNBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyWARNTitle", { fg = palette.orange })
+  add("NotifyERRORBorder", { fg = palette.red })
+  add("NotifyERRORBody", { fg = palette.fg, bg = palette.bg_alt })
+  add("NotifyERRORTitle", { fg = palette.red })
+
+  -- Rainbow Delimiters
+  add("RainbowDelimiterRed", { fg = palette.red })
+  add("RainbowDelimiterYellow", { fg = palette.yellow })
+  add("RainbowDelimiterBlue", { fg = palette.blue })
+  add("RainbowDelimiterOrange", { fg = palette.orange })
+  add("RainbowDelimiterGreen", { fg = palette.green })
+  add("RainbowDelimiterViolet", { fg = palette.purple })
+  add("RainbowDelimiterCyan", { fg = palette.cyan })
+
+  -- Trouble.nvim
+  add("TroubleNormal", { bg = palette.bg_alt })
+  add("TroubleText", { fg = palette.fg })
+  add("TroubleCount", { fg = palette.purple, bg = palette.bg_highlight })
+  add("TroubleError", { fg = palette.red })
+  add("TroubleWarning", { fg = palette.orange })
+  add("TroubleInfo", { fg = palette.info })
+  add("TroubleHint", { fg = palette.blue })
+  add("TroubleFoldIcon", { fg = palette.yellow })
+  add("TroubleIndent", { fg = palette.grey })
+
+  return highlights
+end
+
+function M.setup(opts)
+  opts = opts or {}
+  
+  local defaults = {
+    variant = "auto",
+    transparent = false,
+    dim_inactive = true,
+    styles = {
+      comments = { italic = true },
+      keywords = { bold = true }
+    },
+    terminal_colors = true,
+    compile = true,
+  }
+  
+  opts = vim.tbl_extend("force", defaults, opts)
+  
+  local variant = opts.variant
+  if variant == "auto" then
+    variant = variants.auto()
+  end
+  local palette = get_palette(variant)
+
+  if opts.on_colors then opts.on_colors(palette) end
+
+  vim.cmd("hi clear")
+  if vim.fn.exists("syntax_on") then vim.cmd("syntax reset") end
+  vim.g.colors_name = "aetherglow"
+
+  if opts.terminal_colors ~= false then
+    vim.g.terminal_color_0 = palette.bg
+    vim.g.terminal_color_1 = palette.red
+    vim.g.terminal_color_2 = palette.green
+    vim.g.terminal_color_3 = palette.yellow
+    vim.g.terminal_color_4 = palette.blue
+    vim.g.terminal_color_5 = palette.purple
+    vim.g.terminal_color_6 = palette.teal
+    vim.g.terminal_color_7 = palette.fg
+    vim.g.terminal_color_8 = palette.grey
+    vim.g.terminal_color_9 = palette.red
+    vim.g.terminal_color_10 = palette.green
+    vim.g.terminal_color_11 = palette.yellow
+    vim.g.terminal_color_12 = palette.blue
+    vim.g.terminal_color_13 = palette.purple
+    vim.g.terminal_color_14 = palette.teal
+    vim.g.terminal_color_15 = palette.fg_alt
+  end
+
+  local highlights
+  
+  if opts.compile then
+    local cache_key = get_cache_key(opts)
+    highlights = load_cache(cache_key)
+    
+    if not highlights then
+      highlights = compile_highlights(palette, opts)
+      save_cache(cache_key, highlights)
+    end
+  else
+    highlights = compile_highlights(palette, opts)
+  end
+
+  for group, hl in pairs(highlights) do
+    vim.api.nvim_set_hl(0, group, hl)
+  end
+
+  if opts.on_highlights then 
+    opts.on_highlights(function(group, hl) vim.api.nvim_set_hl(0, group, hl) end, palette) 
+  end
+end
+
+function M.get_palette(variant)
+  return get_palette(variant or "dark_soft")
+end
+
+return M
