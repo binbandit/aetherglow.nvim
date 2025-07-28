@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Neovim-0.8+-92c2ff.svg?style=flat-square&logo=Neovim&logoColor=white" alt="Neovim"/>
   <img src="https://img.shields.io/github/stars/binbandit/aetherglow.nvim?style=flat-square&color=e0b8ff" alt="Stars"/>
-  <img src="https://img.shields.io/badge/themes-5%20variants-ff00ff?style=flat-square" alt="Themes"/>
+  <img src="https://img.shields.io/badge/themes-6%20variants-ff00ff?style=flat-square" alt="Themes"/>
   <img src="https://img.shields.io/badge/plugins-60%2B%20supported-00ff7f?style=flat-square" alt="Plugins"/>
 </p>
 
@@ -42,7 +42,7 @@
 </table>
 
 ## Features
-- **5 Variants**: Dark Soft (low-contrast), Dark Bold (vibrant), Neon Glow (cyberpunk), Aurora Burst (vivid aurora), Light Dawn (warm light)
+- **6 Variants**: Dark Soft (low-contrast), Dark Bold (vibrant), Neon Glow (cyberpunk), Aurora Burst (vivid aurora), Light Dawn (warm light), Siren Seduction (sultry neon)
 - **WCAG AA Compliant**: All colors meet 4.5:1+ contrast ratios for accessibility
 - **Smart Auto-Switching**: Watches `vim.o.background` changes and updates theme in real-time
 - **Advanced Transparency**: Four levels from none to full transparency with smart floating window handling
@@ -201,6 +201,10 @@ require("aetherglow").clear_cache()
   <tr>
     <td><b>Light Dawn</b></td>
     <td>Warm, pastel light theme</td>
+  </tr>
+  <tr>
+    <td><b>Siren Seduction</b></td>
+    <td>Sultry neon theme with hot pinks, crimson reds, and golden accents</td>
   </tr>
 </table>
 

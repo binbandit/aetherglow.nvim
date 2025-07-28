@@ -164,6 +164,32 @@ local variants = {
     contrast = 1.2,
     neon = false,
   },
+  siren_seduction = {
+    bg = "#0a0a12",       -- Velvety deep black for mystery
+    bg_alt = "#14141e",
+    bg_highlight = "#1e1e2a",
+    fg = "#e0e0ff",       -- Soft glowing white for readability
+    fg_alt = "#e0e0ff",
+    grey = "#9999cc",     -- Smoky grey for comments
+    dark_grey = "#333366",
+    red = "#ff4d6a",      -- Crimson allure (sexy red)
+    orange = "#ff9966",   -- Warm amber glow
+    yellow = "#ffd966",   -- Luxurious gold
+    green = "#66ff99",    -- Emerald tease (subtle green)
+    teal = "#66ffff",     -- Turquoise temptation
+    blue = "#6699ff",     -- Indigo mystery
+    purple = "#cc66ff",   -- Sultry lavender
+    magenta = "#ff66cc",  -- Hot pink seduction
+    cyan = "#66ffff",     -- Cyan shimmer
+    accent = "#ff66cc",   -- Pink neon accent
+    border = "#0f0f17",
+    diff_add = "#66ff99",
+    diff_delete = "#ff4d6a",
+    diff_change = "#ff9966",
+    info = "#ffd966",
+    contrast = 1.5,       -- High for dramatic pop
+    neon = true,          -- Enable neon glows
+  },
 }
 
 local function get_palette(variant_name, ensure_wcag)
