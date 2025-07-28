@@ -138,9 +138,12 @@ local function load_cache(cache_key)
   local content = f:read("*all")
   f:close()
   
-  local ok, cached = pcall(loadstring(content))
-  if ok and cached then
-    return cached()
+  local chunk, err = loadstring(content)
+  if chunk then
+    local ok, cached = pcall(chunk)
+    if ok then
+      return cached
+    end
   end
   return nil
 end
