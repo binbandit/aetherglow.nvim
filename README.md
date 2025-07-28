@@ -53,7 +53,8 @@
 - **Blazing Performance**: Compiled highlight caching for instant startups
 
 ## Installation
-Via [Lazy.nvim](https://github.com/folke/lazy.nvim):
+
+### Via [Lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   "binbandit/aetherglow.nvim",
@@ -67,7 +68,17 @@ Via [Lazy.nvim](https://github.com/folke/lazy.nvim):
 }
 ```
 
-Via [Packer](https://github.com/wbthomason/packer.nvim):
+### Via [vim-plug](https://github.com/junegunn/vim-plug):
+```vim
+Plug 'binbandit/aetherglow.nvim'
+```
+
+### Via [mini.deps](https://github.com/echasnovski/mini.deps):
+```lua
+add({ source = "binbandit/aetherglow.nvim" })
+```
+
+### Via [Packer](https://github.com/wbthomason/packer.nvim):
 ```lua
 use {
   "binbandit/aetherglow.nvim",
