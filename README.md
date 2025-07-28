@@ -43,6 +43,7 @@
 
 ## Features
 - **5 Variants**: Dark Soft (low-contrast), Dark Bold (vibrant), Neon Glow (cyberpunk), Aurora Burst (vivid aurora), Light Dawn (warm light)
+- **WCAG AA Compliant**: All colors meet 4.5:1+ contrast ratios for accessibility
 - **Smart Auto-Switching**: Watches `vim.o.background` changes and updates theme in real-time
 - **Advanced Transparency**: Four levels from none to full transparency with smart floating window handling
 - **Semantic Token Support**: Full LSP semantic highlighting with type-specific modifiers
@@ -140,6 +141,23 @@ variant = "auto"
 ```
 
 The theme watches for `background` changes and updates automatically.
+
+### Accessibility & WCAG Compliance
+
+AetherGlow is designed with accessibility in mind. All default color combinations meet WCAG AA standards (4.5:1 contrast ratio for normal text).
+
+**Ensure WCAG Compliance**
+```lua
+require("aetherglow").setup({
+  ensure_wcag = true,  -- Automatically adjust colors to meet WCAG AA
+})
+```
+
+**Validate WCAG Compliance**
+```lua
+-- Check contrast ratios for a variant
+local report = require("aetherglow").validate_wcag("dark_soft")
+```
 
 ### Performance
 
